@@ -8,7 +8,7 @@
 
 #include "network/SocketIO.h"
 
-namespace Monitor {
+namespace GBMonitor {
 
 /// Socket.io delegate used to interact with the GBMonitor server.
 class GBSIODelegate : public cocos2d::network::SocketIO::SIODelegate {
@@ -29,6 +29,6 @@ public:
     void OnRegistered(cocos2d::network::SIOClient*, const std::string& data);
 };
 
-} // namespace Monitor
+} // namespace GBMonitor
 
 #endif

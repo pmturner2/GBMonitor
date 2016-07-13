@@ -8,49 +8,32 @@
 
 #include <string>
 
+#include "GBMonitorBase.h"
+
 namespace cocos2d {
 namespace network {
 class SIOClient;
 } // namespace network
 } // namespaec cocos2d
 
-namespace Monitor {
+namespace GBMonitor {
 class GBSIODelegate;
 
-class SceneMonitor {
+class SceneMonitor : public MonitorBase {
 public:
-    ///  Connect to server at address with socket.io delegate
-    ///
-    ///  @param address  e.g. "10.0.0.4:3000" for ipv4 address 10.0.0.4 and port 3000
-    ///  @param delegate socket.io delegate. Will be retained and stored in _sioDelegate
-    void Connect(const std::string &address, GBSIODelegate *delegate);
-
-    ///  Connect to server at address with socket.io delegate _sioDelegate
-    ///
-    ///  @param address e.g. "10.0.0.4:3000" for ipv4 address 10.0.0.4 and port 3000
-    void Connect(const std::string &address);
-
-    ///  Disconnect from server
-    void Disconnect();
-
-    ///  Sets and retains the socket.io delegate
-    ///
-    ///  @param delegate socket.io delegate
-    void SetSIODelegate(GBSIODelegate *delegate);
-
     ///  Schedules a callback to execute each frame that logs the scene.
-    void Start();
+    void Start() override;
 
     ///  Unschedules a callback if registered.
-    void Stop();
+    void Stop() override;
 
 private:
-    ///  Socket.io delegate for handling messages from the GBMonitor server
-    GBSIODelegate *_sioDelegate = nullptr;
-
-    ///  Client that manages the connection with socket.io server
-    cocos2d::network::SIOClient *_sioClient = nullptr;
+    // Long poll interval now (every 4 seconds) due to renderer being overloaded on the monitor
+    // web client.
+    // TODO: make this a variable and update when renderer is fixed.
+    static constexpr float _pollingInterval = 4.0f;
 };
     
-} // namespace Monitor
+} // namespace GBMonitor
+
 #endif

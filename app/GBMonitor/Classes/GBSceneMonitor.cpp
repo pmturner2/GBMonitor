@@ -12,6 +12,7 @@
 #include "2d/CCNode.h"
 #include "base/CCDirector.h"
 #include "base/CCScheduler.h"
+#include "network/SocketIO.h"
 
 #include "json/document.h"
 #include "json/stringbuffer.h"
@@ -19,34 +20,11 @@
 
 #include "GBSIODelegate.h"
 
-using namespace Monitor;
+using namespace GBMonitor;
 using namespace cocos2d;
 using namespace cocos2d::network;
 
 static const char *kSceneWriteKey = "sceneWrite";
-
-void SceneMonitor::Connect(const std::string &address, GBSIODelegate *delegate) {
-    SetSIODelegate(delegate);
-    Connect(address);
-}
-
-void SceneMonitor::Connect(const std::string &address) {
-    ASSERT_NOT_NULL(_sioDelegate);
-    ASSERT_NULL(_sioClient);
-    _sioClient = SocketIO::connect("10.0.0.4:3000", *_sioDelegate);
-    CC_SAFE_RETAIN(_sioClient);
-    _sioClient->on("registered", CC_CALLBACK_2(GBSIODelegate::OnRegistered, *_sioDelegate));
-    _sioClient->on("connected", CC_CALLBACK_2(GBSIODelegate::OnConnected, *_sioDelegate));
-}
-
-void SceneMonitor::Disconnect() {
-    _sioClient->disconnect();
-    CC_SAFE_RELEASE_NULL(_sioClient);
-}
-
-void SceneMonitor::SetSIODelegate(GBSIODelegate *delegate) {
-    _sioDelegate = delegate;
-}
 
 static Rect GetBoundingBoxInWorld(cocos2d::Node *node) {
     Rect localBB(0, 0, node->getContentSize().width, node->getContentSize().height);
@@ -98,6 +76,8 @@ void SceneMonitor::Start() {
 
         // must pass an allocator when the object may need to allocate memory
         rapidjson::Document::AllocatorType &allocator = output.GetAllocator();
+
+        // TODO: should be in another object (NetworkWrapper object)
         output.AddMember("room", "room_a", allocator);
 
         rapidjson::Value message(rapidjson::kObjectType);
@@ -120,7 +100,7 @@ void SceneMonitor::Start() {
         ASSERT_NOT_NULL(_sioClient);
         _sioClient->emit("log", buffer.GetString());
         CCLOG("PETER Writing to log %s", buffer.GetString());
-    }, this, 10.0f, -1, 0, false,  kSceneWriteKey);
+    }, this, _pollingInterval, -1, 0, false,  kSceneWriteKey);
 }
 
 void SceneMonitor::Stop() {

@@ -13,7 +13,7 @@
 
 using namespace cocos2d;
 using namespace cocos2d::network;
-using namespace Monitor;
+using namespace GBMonitor;
 
 static int unique_id;
 
