@@ -12,15 +12,30 @@
 #include "network/SocketIO.h"
 
 #include "GBSIODelegate.h"
+
+//TEMP
 #include "GBSceneMonitor.h"
+#include "Game/GBBindingsMonitor.h"
 
 using namespace cocos2d;
 using namespace cocos2d::network;
 using namespace GBMonitor;
 
+// Not sure if this should be a singleton. Maybe temp.
+AppMonitor *AppMonitor::_sInstance = nullptr;
+
+AppMonitor::AppMonitor() {
+    _sInstance = this;
+}
+
+AppMonitor::~AppMonitor() {
+    _sInstance = nullptr;
+}
+
 void AppMonitor::Initialize() {
     SetSIODelegate(std::shared_ptr<GBSIODelegate>(new GBSIODelegate()));
     Add("scene", std::shared_ptr<MonitorBase>(new SceneMonitor()));
+    Add("bindings", std::shared_ptr<MonitorBase>(new BindingsMonitor()));
 }
 
 void AppMonitor::Shutdown() {
@@ -73,6 +88,12 @@ void AppMonitor::Add(const std::string &name, std::shared_ptr<MonitorBase> monit
 
 void AppMonitor::Remove(const std::string &name) {
     _monitors.erase(name);
+}
+
+std::shared_ptr<MonitorBase> AppMonitor::Get(const std::string &name) {
+    ASSERT_NOT_NULL(_sInstance);
+    CORE_ASSERT(_sInstance->_monitors.find(name) != _sInstance->_monitors.end(), "Error finding monitor '%s'", name.c_str());
+    return _sInstance->_monitors.at(name);
 }
 
 #endif // GB_NEW_STACK

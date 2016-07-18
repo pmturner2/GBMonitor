@@ -75,16 +75,12 @@ io.on('connection', function(socket) {
   }.bind(socket));
 
   socket.on('join', function(data) {
-    // for (var f in data) {
-    //   console.log("f: " + f + " data + " + data[f]);
-    // }
-    // data.socket.join(data["room"]);
     socket.join(data.room);
     console.log("join message for room " + data.room);
   });
 
   socket.on('log', function(logData) {
-    console.log("log event logData: " + logData.toString());
+    // console.log("log event logData: " + logData.toString());
     var logObject = JSON.parse(logData);
     io.to(logObject.room).emit('log', logObject);
     console.log("log event for room '" + logObject.room + "': message" + logObject.message.toString());
@@ -93,37 +89,4 @@ io.on('connection', function(socket) {
   socket.emit('connected', { port: 3000 });
 });
 
-
 console.log("Starting server...");
-
-// setInterval(function(){
-//   io.to('room_a').emit("periodic", {message: "Message to Room A"});
-//   console.log("emitting periodic message to room_a...");
-// }.bind(this), 1000);
-// io.on('registerApp', function(data) {
-//   socket.emit('connected', { uniqueId: uniqueId++ });
-
-//   socket.on('log', function(data) {
-//     // otherSocket.emit('log', data);
-//   });
-// });
-
-// server.listen(3000);
-
-// var appListener = io.listen(server);
-// appListener.sockets.on('connection', function(socket) {
-//   appSocket = socket.connect();
-
-//   socket.emit('message', {'message': 'hello world'});
-// });
-// appListener.sockets.on('log', function(data) {
-//   outputListener.emit('log', data.message);
-// });
-
-// server.listen(3001);
-// var outputListener = io.listen(server);
-// listener.sockets.on('connection', function(socket) {
-//   socket.emit('message', {'message': 'hello world'});
-// });
-
-

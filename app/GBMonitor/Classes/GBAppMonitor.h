@@ -18,6 +18,21 @@ class SceneMonitor;
 
 class AppMonitor : public MonitorBase {
 public:
+    AppMonitor();
+    ~AppMonitor() override;
+
+    ///  Get singleton instance of this AppMonitor
+    ///
+    ///  @return AppMonitor instance
+    static AppMonitor *Get() { return _sInstance; }
+
+    ///  Gets a monitor with the specified name.
+    ///
+    ///  @param name name of monitor
+    ///
+    ///  @return shared ptr to the monitor
+    static std::shared_ptr<MonitorBase> Get(const std::string &name);
+
     void Initialize();
     void Shutdown();
 
@@ -55,6 +70,8 @@ private:
 
     ///  Collection of monitors currently attached.
     std::unordered_map<std::string, std::shared_ptr<MonitorBase>> _monitors;
+
+    static AppMonitor *_sInstance;
 };
 
 } // namespace Monitor

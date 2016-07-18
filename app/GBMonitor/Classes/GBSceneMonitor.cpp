@@ -18,8 +18,6 @@
 #include "json/stringbuffer.h"
 #include "json/writer.h"
 
-#include "GBSIODelegate.h"
-
 using namespace GBMonitor;
 using namespace cocos2d;
 using namespace cocos2d::network;
@@ -31,41 +29,52 @@ static Rect GetBoundingBoxInWorld(cocos2d::Node *node) {
     return RectApplyAffineTransform(localBB, node->getNodeToWorldAffineTransform());
 }
 
+static int nameCount = 0;
 static void LogNode(cocos2d::Node *node, rapidjson::Value &parent, rapidjson::Document::AllocatorType &allocator) {
     rapidjson::Value domNode(rapidjson::kObjectType);
-
-    domNode.AddMember("x", node->getPositionX(), allocator);
-    domNode.AddMember("y", node->getPositionY(), allocator);
-    domNode.AddMember("z", node->getLocalZOrder(), allocator);
-    domNode.AddMember("width", node->getContentSize().width, allocator);
-    domNode.AddMember("height", node->getContentSize().height, allocator);
-    domNode.AddMember("scaleX", node->getScaleX(), allocator);
-    domNode.AddMember("scaleY", node->getScaleY(), allocator);
-    Rect rect = GetBoundingBoxInWorld(node);
-    domNode.AddMember("bb_x", rect.origin.x, allocator);
-    domNode.AddMember("bb_y", rect.origin.y, allocator);
-    domNode.AddMember("bb_w", rect.size.width, allocator);
-    domNode.AddMember("bb_h", rect.size.height, allocator);
-
+//
+//    domNode.AddMember("x", node->getPositionX(), allocator);
+//    domNode.AddMember("y", node->getPositionY(), allocator);
+//    domNode.AddMember("z", node->getLocalZOrder(), allocator);
+//    domNode.AddMember("width", node->getContentSize().width, allocator);
+//    domNode.AddMember("height", node->getContentSize().height, allocator);
+//    domNode.AddMember("scaleX", node->getScaleX(), allocator);
+//    domNode.AddMember("scaleY", node->getScaleY(), allocator);
+//    Rect rect = GetBoundingBoxInWorld(node);
+//    domNode.AddMember("bb_x", rect.origin.x, allocator);
+//    domNode.AddMember("bb_y", rect.origin.y, allocator);
+//    domNode.AddMember("bb_w", rect.size.width, allocator);
+//    domNode.AddMember("bb_h", rect.size.height, allocator);
+    if (node->getName().empty()) {
+        char nameBuff[32];
+        snprintf(nameBuff, 32, "empty_%d", nameCount++);
+        node->setName(nameBuff);
+    }
     rapidjson::Value name;
     name.SetString(node->getName().c_str(), static_cast<unsigned int>(node->getName().size()), allocator);
     domNode.AddMember("name", name, allocator);
+
+
+    rapidjson::Value parentName;
+    if (node->getParent()) {
+        parentName.SetString(node->getParent()->getName().c_str(), static_cast<unsigned int>(node->getParent()->getName().size()), allocator);
+        domNode.AddMember("parent", parentName, allocator);
+    }
+
+
     // domNode.AddMember("color", node->getColor(), allocator);
 
-    rapidjson::Value domChildren(rapidjson::kArrayType);
-    for (auto child : node->getChildren()) {
-        LogNode(child, domChildren, allocator);
+    // Recursively populate descendants.
+    if (node->getChildrenCount() > 0) {
+        rapidjson::Value domChildren(rapidjson::kArrayType);
+        for (auto child : node->getChildren()) {
+            LogNode(child, domChildren, allocator);
+        }
+        domNode.AddMember("children", domChildren, allocator);
     }
-    domNode.AddMember("children", domChildren, allocator);
 
-    if (parent.IsArray()) {
-        parent.PushBack(domNode, allocator);
-    } else if (parent.IsObject()) {
-        // Maybe assert and only allow array.
-        parent.AddMember("child", domNode, allocator);
-    } else {
-        // ERROR.
-    }
+    CORE_ASSERT(parent.IsArray(), "Unexpected parent is not an array");
+    parent.PushBack(domNode, allocator);
 }
 
 void SceneMonitor::Start() {
@@ -87,7 +96,7 @@ void SceneMonitor::Start() {
         message.AddMember("sceneHeight", Director::getInstance()->getWinSize().height, allocator);
 
         // Add scene hierarchy
-        rapidjson::Value scene(rapidjson::kObjectType);
+        rapidjson::Value scene(rapidjson::kArrayType);
         LogNode(Director::getInstance()->getRunningScene(), scene, allocator);
         message.AddMember("scene", scene, allocator);
 
